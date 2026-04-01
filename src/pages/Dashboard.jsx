@@ -54,40 +54,76 @@ const MetricCard = ({ title, value, trend, isPositiveTrend, desc, color }) => (
 const Dashboard = () => {
   const [latestRun, setLatestRun] = useState(null);
   const [loadingRuns, setLoadingRuns] = useState(true);
+  const [portfolios, setPortfolios] = useState([]);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
 
-  // Static mock UI configuration
-  const mockHoldings = [
-    { ticker: 'AAPL', weight: 0.40, risk: 0.45, status: 'High' },
-    { ticker: 'US10Y', weight: 0.35, risk: 0.10, status: 'Low' },
-    { ticker: 'GLD', weight: 0.25, risk: 0.15, status: 'Low' }
-  ];
-
+  // Load portfolios first
   useEffect(() => {
-    const fetchLatestRun = async () => {
+    const initPortfolios = async () => {
+      try {
+        const data = await apiClient('/portfolios/');
+        setPortfolios(data);
+        if (data.length > 0) setSelectedPortfolioId(data[0].portfolio_id);
+      } catch (err) {
+        console.error('Failed to load portfolios:', err);
+      }
+    };
+    initPortfolios();
+  }, []);
+
+  // Fetch Dashboard Summary when portfolio changes
+  useEffect(() => {
+    if (!selectedPortfolioId) return;
+    const fetchSummary = async () => {
       setLoadingRuns(true);
       try {
-        const runs = await apiClient('/simulation-runs/');
-        if (runs && runs.length > 0) {
-          const sorted = [...runs].sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
-          setLatestRun(sorted[0]);
+        // Use the new aggregate dashboard endpoint
+        const data = await apiClient(`/dashboard/${selectedPortfolioId}`);
+        setDashboardData(data);
+        // Map the summary parts to existing state and variables
+        if (data.latest_metrics) {
+            // Convert dashboard format to simulation-run format for stats helper
+            setLatestRun({
+                risk_metrics: Object.entries(data.latest_metrics).map(([key, val]) => ({
+                    metric_type: key,
+                    metric_value: val
+                })),
+                histogram_data: data.histogram,
+                run_id: data.runs_summary?.last_run_id || 'Latest',
+                run_type: 'Portfolio Aggregate'
+            });
         }
       } catch (err) {
-        console.error('Failed to fetch runs:', err);
+        console.error('Dashboard optimization fetch failed:', err);
+        // Fallback to old behavior if endpoint not ready
+        const runs = await apiClient('/simulation-runs/');
+        const filtered = (runs || []).filter(r => r.portfolio_id === selectedPortfolioId);
+        if (filtered.length > 0) {
+            const sorted = [...filtered].sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+            setLatestRun(sorted[0]);
+        }
       } finally {
         setLoadingRuns(false);
       }
     };
-    fetchLatestRun();
-  }, []);
+    fetchSummary();
+  }, [selectedPortfolioId]);
+
+  const getMetric = (type, fallback = 0) => {
+    if (!latestRun?.risk_metrics) return fallback;
+    const m = latestRun.risk_metrics.find(x => x.metric_type === type);
+    return m ? m.metric_value : fallback;
+  };
 
   const stats = {
-    varValue: latestRun?.risk_metrics?.VaR_95 || 0.042,
-    esValue: latestRun?.risk_metrics?.ES_95 || 0.085,
-    var: latestRun?.risk_metrics?.VaR_95 ? `${(latestRun.risk_metrics.VaR_95 * 100).toFixed(2)}%` : '-4.20%',
-    es: latestRun?.risk_metrics?.ES_95 ? `${(latestRun.risk_metrics.ES_95 * 100).toFixed(2)}%` : '-8.50%',
-    vol: latestRun?.risk_metrics?.volatility ? `${(latestRun.risk_metrics.volatility * 100).toFixed(2)}%` : '18.50%',
+    varValue: getMetric('VaR_95', 0.042),
+    esValue: getMetric('ES_95', 0.085),
+    var: latestRun?.risk_metrics ? `${(getMetric('VaR_95', 0.042) * 100).toFixed(2)}%` : '-4.20%',
+    es: latestRun?.risk_metrics ? `${(getMetric('ES_95', 0.085) * 100).toFixed(2)}%` : '-8.50%',
+    vol: latestRun?.risk_metrics ? `${(getMetric('volatility', 0.185) * 100).toFixed(2)}%` : '18.50%',
     sharpe: '1.42',
-    runTitle: latestRun ? `Showing data for latest run: ${latestRun.simulation_type === 'monte_carlo_gbm' ? 'Monte Carlo' : latestRun.simulation_type} (#${latestRun.run_id})` : 'Showing aggregate portfolio risk estimates'
+    runTitle: latestRun ? `Showing data for latest run: ${latestRun.run_type === 'monte_carlo_gbm' ? 'Monte Carlo' : (latestRun.run_type || 'Simulation')} (#${latestRun.run_id})` : 'Showing aggregate portfolio risk estimates'
   };
 
   // Process Histogram Data
@@ -199,11 +235,15 @@ const Dashboard = () => {
         </div>
         
         <div>
-          <Link to="/simulate" style={{ textDecoration: 'none' }}>
-            <button style={{ background: 'var(--btn-bg)', border: '1px solid rgba(217,70,239,0.2)', padding: '11px 22px', borderRadius: '10px', color: 'var(--btn-color)', fontSize: '0.9rem', fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: 'var(--btn-shadow)', letterSpacing: '0.01em', transition: 'all 0.2s' }}>
-               <Play size={17} /> Run Simulation
-            </button>
-          </Link>
+           <select 
+              value={selectedPortfolioId || ''} 
+              onChange={(e) => setSelectedPortfolioId(Number(e.target.value))}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(217,70,239,0.3)', padding: '11px 22px', borderRadius: '10px', color: '#fff', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', outline: 'none' }}
+           >
+              {portfolios.map(p => (
+                <option key={p.portfolio_id} value={p.portfolio_id}>{p.name}</option>
+              ))}
+           </select>
         </div>
       </div>
 
@@ -284,14 +324,21 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockHoldings.map((h, i) => (
+                  {(dashboardData?.holdings || []).map((h, i) => (
                     <tr key={i} style={{ borderBottom: 'none' }}>
                        <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{h.ticker}</td>
                        <td>{(h.weight * 100).toFixed(1)}%</td>
-                       <td>{(h.risk * 100).toFixed(1)}%</td>
-                       <td style={{ color: h.status === 'High' ? '#EF4444' : '#10B981' }}>{h.status} Risk Context</td>
+                       <td>{(h.risk_contribution * 100).toFixed(1)}%</td>
+                       <td style={{ color: h.risk_contribution > 0.3 ? '#EF4444' : '#10B981' }}>{h.risk_contribution > 0.3 ? 'High' : 'Low'} Risk</td>
                     </tr>
                   ))}
+                  {(!dashboardData?.holdings || dashboardData.holdings.length === 0) && (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        No holdings data available for this portfolio.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
            </div>

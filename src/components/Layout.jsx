@@ -21,6 +21,37 @@ const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Search state
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState([]);
+  const [searching, setSearching] = React.useState(false);
+  const [showResults, setShowResults] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+      setSearching(true);
+      try {
+        const data = await apiClient(`/search/?q=${encodeURIComponent(searchQuery)}`);
+        // Flatten the categorized results for the dropdown
+        const flattened = [
+          ...(data.assets || []).map(a => ({ type: 'Asset', name: a.asset_name, subtext: a.ticker, path: '/assets' })),
+          ...(data.portfolios || []).map(p => ({ type: 'Portfolio', name: p.name, subtext: p.base_currency, path: '/portfolios' })),
+          ...(data.scenarios || []).map(s => ({ type: 'Scenario', name: s.name, subtext: 'Stress Test', path: '/scenarios' }))
+        ];
+        setSearchResults(flattened);
+      } catch (err) {
+        console.error('Search failed:', err);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -171,6 +202,8 @@ const Layout = () => {
             <input
               type="text"
               placeholder="Search assets, portfolios, simulations…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%', padding: '10px 14px 10px 40px',
                 background: 'rgba(255,255,255,0.03)',
@@ -178,9 +211,36 @@ const Layout = () => {
                 borderRadius: '10px', color: '#fff', fontSize: '0.875rem', outline: 'none',
                 transition: 'border-color 0.2s',
               }}
-              onFocus={(e) => e.target.style.borderColor = 'rgba(217,70,239,0.4)'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(217,70,239,0.12)'}
+              onFocus={(e) => { e.target.style.borderColor = 'rgba(217,70,239,0.4)'; setShowResults(true); }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(217,70,239,0.12)'; setTimeout(() => setShowResults(false), 200); }}
             />
+            {showResults && searchQuery.length >= 2 && (
+              <div className="glass-panel" style={{ position: 'absolute', top: '110%', left: 0, right: 0, maxHeight: '300px', overflowY: 'auto', zIndex: 100, padding: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', border: '1px solid rgba(217,70,239,0.2)' }}>
+                {searching ? (
+                  <div style={{ padding: '12px', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Searching...</div>
+                ) : searchResults.length === 0 ? (
+                  <div style={{ padding: '12px', fontSize: '0.875rem', color: 'var(--text-muted)' }}>No matches found.</div>
+                ) : (
+                  searchResults.map((res, i) => (
+                    <div 
+                      key={i} 
+                      onClick={() => navigate(res.path)}
+                      style={{ padding: '10px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'background 0.2s' }}
+                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(217,70,239,0.1)'}
+                      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(217,70,239,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)' }}>
+                        {res.type === 'Asset' ? <Briefcase size={14} /> : res.type === 'Portfolio' ? <PieChart size={14} /> : <Activity size={14} />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{res.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{res.type} • {res.subtext}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: user chip */}

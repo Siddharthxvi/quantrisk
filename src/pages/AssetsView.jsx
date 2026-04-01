@@ -112,7 +112,15 @@ const AssetsView = () => {
       </div>
 
       {error ? (
-        <div style={{ color: 'var(--status-error)' }}>Failed to load assets: {error}</div>
+        <div style={{ padding: '24px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--status-error)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 600 }}>
+            <AlertCircle size={20} /> Failed to connect to risk engine
+          </div>
+          <p style={{ fontSize: '0.875rem', opacity: 0.8, margin: 0 }}>{error}</p>
+          <button onClick={fetchAssets} style={{ marginTop: '16px', padding: '8px 16px', borderRadius: '6px', background: 'var(--status-error)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+            Retry Connection
+          </button>
+        </div>
       ) : loading ? (
         <div>Loading assets...</div>
       ) : (
