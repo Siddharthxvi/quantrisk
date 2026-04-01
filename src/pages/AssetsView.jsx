@@ -181,8 +181,8 @@ const AssetsView = () => {
 
       {/* Basic Modal */}
       {isModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(10, 15, 28, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '24px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(10, 15, 28, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', zIndex: 100, padding: '24px', overflowY: 'auto' }}>
+          <div className="glass-panel" style={{ margin: 'auto', width: '100%', maxWidth: '500px', padding: '24px', position: 'relative' }}>
             <button 
               onClick={() => setIsModalOpen(false)}
               style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}

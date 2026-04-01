@@ -112,7 +112,11 @@ const SandboxView = () => {
           <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <PlaySquare color="var(--accent-emerald)" /> Simulation Sandbox
           </h1>
-          <p style={{ margin: 0 }}>Ad-hoc exploratory stress testing</p>
+          <p style={{ margin: 0, lineHeight: '1.5', maxWidth: '800px' }}>
+            Ad-hoc exploratory stress testing. The Sandbox allows you to dynamically build custom portfolios 
+            and instantly run comprehensive Monte Carlo simulations using live parameter configuration. 
+            Adjust holdings directly to view localized risk breakdowns and visualize exactly how potential losses scale.
+          </p>
         </div>
       </div>
 

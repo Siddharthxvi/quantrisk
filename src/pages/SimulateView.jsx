@@ -140,8 +140,6 @@ const SimulateView = () => {
               style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--accent-emerald)', color: 'var(--text-primary)', fontSize: '1rem', outline: 'none', cursor: 'pointer', appearance: 'none' }}
             >
               <option value="monte_carlo_gbm">✓ Monte Carlo (Geometric Brownian Motion)</option>
-              <option value="historical">Historical Bootstrap</option>
-              <option value="parametric">Parametric (Variance-Covariance)</option>
             </select>
           </div>
 
