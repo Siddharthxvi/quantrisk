@@ -163,6 +163,39 @@ export const apiClient = async (endpoint, options = {}) => {
        }
        return mockRuns[idx] || mockRuns[0];
     }
+
+    if (endpoint.match(/\/dashboard\/\d+/)) {
+      const pid = parseInt(endpoint.split('/')[2]);
+      const pRuns = mockRuns.filter(r => r.portfolio_id === pid);
+      const latest = pRuns.sort((a,b) => new Date(b.started_at) - new Date(a.started_at))[0] || mockRuns[0];
+      
+      const portfolio = mockPortfolios.find(p => p.portfolio_id === pid) || mockPortfolios[0];
+      
+      return {
+        latest_metrics: {
+          VaR_95: latest.risk_metrics.find(m => m.metric_type === 'VaR_95')?.metric_value || 0.042,
+          ES_95: latest.risk_metrics.find(m => m.metric_type === 'ES_95')?.metric_value || 0.085,
+          volatility: latest.risk_metrics.find(m => m.metric_type === 'volatility')?.metric_value || 0.18,
+          max_drawdown: latest.risk_metrics.find(m => m.metric_type === 'max_drawdown')?.metric_value || 0.25
+        },
+        histogram: latest.histogram_data,
+        holdings: portfolio.assets.map(pa => {
+          const asset = mockAssets.find(a => a.asset_id === pa.asset_id);
+          return {
+            ticker: asset?.ticker || 'N/A',
+            weight: pa.weight,
+            risk_contribution: pa.weight * (asset?.annual_volatility || 0.2) / 0.35 // Mock calc
+          };
+        }),
+        runs_summary: {
+          total: pRuns.length,
+          completed: pRuns.filter(r => r.status === 'completed').length,
+          failed: pRuns.filter(r => r.status === 'failed').length,
+          last_run_id: latest.run_id,
+          last_run_at: latest.started_at
+        }
+      };
+    }
     
     if (endpoint.includes('/simulation-runs/')) {
       if (isPost) {

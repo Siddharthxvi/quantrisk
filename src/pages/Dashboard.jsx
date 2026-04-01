@@ -57,6 +57,8 @@ const Dashboard = () => {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
+  const [refreshCountdown, setRefreshCountdown] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Load portfolios first
   useEffect(() => {
@@ -72,18 +74,19 @@ const Dashboard = () => {
     initPortfolios();
   }, []);
 
-  // Fetch Dashboard Summary when portfolio changes
+  // Fetch Dashboard Summary when portfolio changes or on interval
   useEffect(() => {
     if (!selectedPortfolioId) return;
-    const fetchSummary = async () => {
-      setLoadingRuns(true);
+    
+    let intervalId;
+    const fetchSummary = async (isBackground = false) => {
+      if (!isBackground) setLoadingRuns(true);
       try {
-        // Use the new aggregate dashboard endpoint
         const data = await apiClient(`/dashboard/${selectedPortfolioId}`);
         setDashboardData(data);
-        // Map the summary parts to existing state and variables
+        setLastUpdated(new Date());
+        
         if (data.latest_metrics) {
-            // Convert dashboard format to simulation-run format for stats helper
             setLatestRun({
                 risk_metrics: Object.entries(data.latest_metrics).map(([key, val]) => ({
                     metric_type: key,
@@ -96,7 +99,6 @@ const Dashboard = () => {
         }
       } catch (err) {
         console.error('Dashboard optimization fetch failed:', err);
-        // Fallback to old behavior if endpoint not ready
         const runs = await apiClient('/simulation-runs/');
         const filtered = (runs || []).filter(r => r.portfolio_id === selectedPortfolioId);
         if (filtered.length > 0) {
@@ -107,7 +109,15 @@ const Dashboard = () => {
         setLoadingRuns(false);
       }
     };
+
     fetchSummary();
+    
+    // Auto-refresh every 10 seconds to detect new simulation results
+    intervalId = setInterval(() => {
+        fetchSummary(true);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [selectedPortfolioId]);
 
   const getMetric = (type, fallback = 0) => {
@@ -234,7 +244,30 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <div></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+           <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Real-time Link</div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)', animation: 'refresh-pulse 2s infinite' }}></div>
+                 Live Monitoring Enabled
+              </div>
+           </div>
+           <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.1)' }}></div>
+           <button 
+             onClick={() => {
+                // Re-triggering the effect by cycling the ID (or just calling fetch if we exported it, but simple is better)
+                setSelectedPortfolioId(null);
+                setTimeout(() => setSelectedPortfolioId(dashboardData?.runs_summary?.portfolio_id || 1), 10);
+             }}
+             style={{ 
+               background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', 
+               color: '#fff', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
+               fontSize: '0.875rem', fontWeight: 600
+             }}
+           >
+             Refresh Now
+           </button>
+        </div>
       </div>
 
       {/* 4 Metric Cards */}
