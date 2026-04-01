@@ -1,8 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Info, TrendingDown, TrendingUp, AlertTriangle, ShieldCheck } from 'lucide-react';
-import { Line, Bar } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { apiClient } from '../api/apiClient';
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title, 
+  Tooltip as ChartTooltip, 
+  Legend, 
+  Filler 
+} from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  ChartTooltip,
+  Legend,
+  Filler,
+  annotationPlugin
+);
 
 // Helper metric card
 const MetricCard = ({ title, value, trend, isPositiveTrend, desc, color }) => (
@@ -30,18 +52,15 @@ const MetricCard = ({ title, value, trend, isPositiveTrend, desc, color }) => (
 );
 
 const Dashboard = () => {
-  const [activeRange, setActiveRange] = useState('1M');
-  const [chartData, setChartData] = useState(null);
-  
-  // Static mock UI configuration to match the high-fidelity screenshot exactly
+  const [latestRun, setLatestRun] = useState(null);
+  const [loadingRuns, setLoadingRuns] = useState(true);
+
+  // Static mock UI configuration
   const mockHoldings = [
     { ticker: 'AAPL', weight: 0.40, risk: 0.45, status: 'High' },
     { ticker: 'US10Y', weight: 0.35, risk: 0.10, status: 'Low' },
     { ticker: 'GLD', weight: 0.25, risk: 0.15, status: 'Low' }
   ];
-
-  const [latestRun, setLatestRun] = useState(null);
-  const [loadingRuns, setLoadingRuns] = useState(true);
 
   useEffect(() => {
     const fetchLatestRun = async () => {
@@ -49,7 +68,6 @@ const Dashboard = () => {
       try {
         const runs = await apiClient('/simulation-runs/');
         if (runs && runs.length > 0) {
-          // Sort by start date (desc) to find the most recent
           const sorted = [...runs].sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
           setLatestRun(sorted[0]);
         }
@@ -62,60 +80,110 @@ const Dashboard = () => {
     fetchLatestRun();
   }, []);
 
-  // Use run metrics if available, otherwise mock data
   const stats = {
+    varValue: latestRun?.risk_metrics?.VaR_95 || 0.042,
+    esValue: latestRun?.risk_metrics?.ES_95 || 0.085,
     var: latestRun?.risk_metrics?.VaR_95 ? `${(latestRun.risk_metrics.VaR_95 * 100).toFixed(2)}%` : '-4.20%',
     es: latestRun?.risk_metrics?.ES_95 ? `${(latestRun.risk_metrics.ES_95 * 100).toFixed(2)}%` : '-8.50%',
     vol: latestRun?.risk_metrics?.volatility ? `${(latestRun.risk_metrics.volatility * 100).toFixed(2)}%` : '18.50%',
-    sharpe: '1.42', // Mock as it's not in the base run data
+    sharpe: '1.42',
     runTitle: latestRun ? `Showing data for latest run: ${latestRun.simulation_type === 'monte_carlo_gbm' ? 'Monte Carlo' : latestRun.simulation_type} (#${latestRun.run_id})` : 'Showing aggregate portfolio risk estimates'
   };
 
-  useEffect(() => {
-    // Generate mock random walk performance data for the Line chart to match the UI spec
-    const generatePath = (days, startPrice = 100) => {
-        let path = [startPrice];
-        for(let i=1; i<days; i++) {
-           path.push(path[i-1] * (1 + (Math.random() * 0.02 - 0.009)));
-        }
-        return path;
-    };
-    
-    const days = activeRange === '1M' ? 30 : activeRange === '3M' ? 90 : 365;
-    const path = generatePath(days);
-    const labels = Array.from({length: days}).map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - (days - i));
-        return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-    });
-
-    setChartData({
-      labels,
-      datasets: [{
-        label: 'Portfolio Value',
-        data: path,
-        borderColor: '#D946EF',
-        backgroundColor: 'rgba(217, 70, 239, 0.08)',
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 0
-      }]
-    });
-  }, [activeRange]);
-
-  // Generate Risk Histogram mock to match UI
+  // Process Histogram Data
   const histBins = 40;
+  let labels, counts;
+  
+  if (latestRun?.histogram_data) {
+    const h = latestRun.histogram_data;
+    labels = h.bin_edges.slice(0, -1).map((edge, i) => {
+        const mid = (edge + h.bin_edges[i+1]) / 2;
+        return mid;
+    });
+    counts = h.counts;
+  } else {
+    // High-fidelity Mock Histogram
+    labels = Array.from({length: histBins}).map((_, i) => -0.15 + i*0.0075);
+    counts = Array.from({length: histBins}).map((_, i) => Math.exp(-Math.pow(i - 20, 2) / 50) * 100);
+  }
+
+  // Find index for shading (ES Region)
+  const varThreshold = -stats.varValue;
+  const esIndex = labels.findIndex(l => l >= varThreshold);
+
   const histData = {
-    labels: Array.from({length: histBins}).map((_, i) => `${-15 + i*0.75}%`),
+    labels: labels.map(l => `${(l*100).toFixed(1)}%`),
     datasets: [{
       label: 'Frequency',
-      data: Array.from({length: histBins}).map((_, i) => Math.exp(-Math.pow(i - 20, 2) / 50) * 100),
-      backgroundColor: Array.from({length: histBins}).map((_, i) => i < 12 ? '#F0007B' : '#A855F7'),
-      borderWidth: 0,
-      barPercentage: 0.9,
+      data: counts,
+      backgroundColor: labels.map((l, i) => i < esIndex ? 'rgba(240, 0, 123, 0.6)' : 'rgba(168, 85, 247, 0.4)'),
+      borderColor: labels.map((l, i) => i < esIndex ? '#F0007B' : 'transparent'),
+      borderWidth: labels.map((l, i) => i < esIndex ? 1 : 0),
+      barPercentage: 1.0,
       categoryPercentage: 1.0
     }]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `Frequency: ${ctx.raw.toFixed(0)}`,
+          afterBody: () => [
+            `-------------------`,
+            `VaR (95%): ${(stats.varValue * 100).toFixed(2)}%`,
+            `Expected Shortfall: ${(stats.esValue * 100).toFixed(2)}%`,
+            `Confidence: 95.0%`
+          ]
+        },
+        backgroundColor: 'rgba(10, 15, 28, 0.9)',
+        titleColor: 'var(--accent-emerald)',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: false
+      },
+      annotation: {
+        annotations: {
+          varLine: {
+            type: 'line',
+            xMin: esIndex,
+            xMax: esIndex,
+            borderColor: '#F0007B',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            label: {
+              display: true,
+              content: 'VaR (95%)',
+              position: 'start',
+              backgroundColor: 'rgba(240, 0, 123, 0.8)',
+              color: '#fff',
+              font: { size: 10, weight: 'bold' },
+              padding: 4
+            }
+          }
+        }
+      }
+    },
+    scales: {
+      x: { 
+        grid: { display: false }, 
+        ticks: { maxTicksLimit: 12, color: 'var(--text-muted)' },
+        title: { 
+          display: true, 
+          text: 'SIMULATED PORTFOLIO RETURNS (%)', 
+          color: 'var(--text-muted)', 
+          font: { family: 'monospace', size: 10 }, 
+          padding: { top: 20 } 
+        }
+      },
+      y: { display: false }
+    }
   };
 
   return (
@@ -140,7 +208,7 @@ const Dashboard = () => {
       </div>
 
       {/* 4 Metric Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '32px' }}>
         <MetricCard 
           title="Value At Risk (95%)"
           value={stats.var}
@@ -155,7 +223,7 @@ const Dashboard = () => {
           trend={0.5}
           isPositiveTrend={true}
           color="var(--status-error)"
-          desc="Average loss in the worst 5% of scenarios."
+          desc="Average loss in lowest 5% scenarios."
         />
         <MetricCard 
           title="Annualized Volatility"
@@ -163,7 +231,7 @@ const Dashboard = () => {
           trend={2.1}
           isPositiveTrend={true}
           color="var(--accent-lavender)"
-          desc="Standard deviation of portfolio returns over the last 252 trading days."
+          desc="Standard deviation of portfolio returns."
         />
         <MetricCard 
           title="Sharpe Ratio"
@@ -171,55 +239,8 @@ const Dashboard = () => {
           trend={4.5}
           isPositiveTrend={true}
           color="var(--text-primary)"
-          desc="Risk-adjusted return relative to the risk-free rate."
+          desc="Risk-adjusted return relative to risk-free rate."
         />
-      </div>
-
-      {/* Performance History Line Chart */}
-      <div className="glass-panel" style={{ padding: '32px', marginBottom: '32px' }}>
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-               <TrendingUp color="var(--accent-emerald)" /> Performance History
-            </h2>
-            <div style={{ display: 'flex', gap: '8px' }}>
-               {['1D', '1W', '1M', '3M', '1Y', 'ALL'].map(range => (
-                 <button 
-                   key={range}
-                   onClick={() => setActiveRange(range)}
-                   style={{ 
-                     background: activeRange === range ? 'rgba(16, 185, 129, 0.15)' : 'transparent', 
-                     border: `1px solid ${activeRange === range ? 'var(--accent-emerald)' : 'rgba(255,255,255,0.1)'}`,
-                     color: activeRange === range ? 'var(--accent-emerald)' : 'var(--text-secondary)',
-                     padding: '6px 16px',
-                     borderRadius: '6px',
-                     fontSize: '0.75rem',
-                     fontWeight: 600,
-                     cursor: 'pointer'
-                   }}>
-                   {range}
-                 </button>
-               ))}
-            </div>
-         </div>
-         <div style={{ height: '300px' }}>
-            {chartData && (
-              <Line 
-                data={chartData} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-                  scales: {
-                     x: { grid: { display: false }, ticks: { maxTicksLimit: 8, color: '#666' } },
-                     y: { 
-                       grid: { color: 'rgba(255,255,255,0.05)' }, 
-                       ticks: { callback: (val) => `$${val}`, color: '#666' } 
-                     }
-                  }
-                }} 
-              />
-            )}
-         </div>
       </div>
 
       {/* Risk Histogram & Top Holdings Grid */}
@@ -227,25 +248,24 @@ const Dashboard = () => {
         
         <div className="glass-panel" style={{ padding: '32px' }}>
            <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-              <AlertTriangle color="#EF4444" /> Risk Distribution (Monte Carlo)
+              <AlertTriangle color="#F0007B" /> Risk Distribution (Monte Carlo Analysis)
            </h2>
-           <div style={{ height: '300px' }}>
-              <Bar 
-                 data={histData}
-                 options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                       x: { 
-                          grid: { display: false }, 
-                          ticks: { maxTicksLimit: 12, color: '#666' },
-                          title: { display: true, text: 'SIMULATED PORTFOLIO RETURNS (%)', color: '#666', font: { family: 'monospace', size: 12 }, padding: { top: 20 } }
-                       },
-                       y: { display: false, grid: { display: false } }
-                    }
-                 }}
-              />
+           <div style={{ height: '350px' }}>
+              <Bar data={histData} options={chartOptions} />
+           </div>
+           <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', background: 'rgba(240, 0, 123, 0.6)', borderRadius: '2px' }} />
+                <span>ES Tail Region</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', background: 'rgba(168, 85, 247, 0.4)', borderRadius: '2px' }} />
+                <span>Standard Scenarios</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '18px', height: '0', borderTop: '2px dashed #F0007B' }} />
+                <span>95% VaR Threshold</span>
+              </div>
            </div>
         </div>
 

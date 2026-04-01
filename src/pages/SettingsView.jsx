@@ -313,7 +313,6 @@ const SettingsView = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button onClick={handleHealthCheck} style={{ padding: '12px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><Server size={18} /> System Health Check</button>
               <button onClick={() => handleDevAction('/verify-schema', 'Schema Verification')} style={{ padding: '12px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><CheckCircle size={18} /> Verify Core Schemas</button>
-              <button onClick={() => handleDevAction('/dev/test-simulation', 'Test Simulation')} style={{ padding: '12px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><Command size={18} /> Run Test Engine Check</button>
             </div>
             <div style={{ background: '#0a0a0a', border: '1px solid #333', borderRadius: '8px', padding: '16px', fontFamily: 'monospace', fontSize: '0.75rem', color: '#888', minHeight: '150px', overflowY: 'auto' }}>
               {devLogs.length === 0 ? 'System console ready. Waiting for events...' : devLogs.map((log, i) => (
