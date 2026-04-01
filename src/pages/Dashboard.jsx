@@ -40,6 +40,37 @@ const Dashboard = () => {
     { ticker: 'GLD', weight: 0.25, risk: 0.15, status: 'Low' }
   ];
 
+  const [latestRun, setLatestRun] = useState(null);
+  const [loadingRuns, setLoadingRuns] = useState(true);
+
+  useEffect(() => {
+    const fetchLatestRun = async () => {
+      setLoadingRuns(true);
+      try {
+        const runs = await apiClient('/simulation-runs/');
+        if (runs && runs.length > 0) {
+          // Sort by start date (desc) to find the most recent
+          const sorted = [...runs].sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+          setLatestRun(sorted[0]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch runs:', err);
+      } finally {
+        setLoadingRuns(false);
+      }
+    };
+    fetchLatestRun();
+  }, []);
+
+  // Use run metrics if available, otherwise mock data
+  const stats = {
+    var: latestRun?.risk_metrics?.VaR_95 ? `${(latestRun.risk_metrics.VaR_95 * 100).toFixed(2)}%` : '-4.20%',
+    es: latestRun?.risk_metrics?.ES_95 ? `${(latestRun.risk_metrics.ES_95 * 100).toFixed(2)}%` : '-8.50%',
+    vol: latestRun?.risk_metrics?.volatility ? `${(latestRun.risk_metrics.volatility * 100).toFixed(2)}%` : '18.50%',
+    sharpe: '1.42', // Mock as it's not in the base run data
+    runTitle: latestRun ? `Showing data for latest run: ${latestRun.simulation_type === 'monte_carlo_gbm' ? 'Monte Carlo' : latestRun.simulation_type} (#${latestRun.run_id})` : 'Showing aggregate portfolio risk estimates'
+  };
+
   useEffect(() => {
     // Generate mock random walk performance data for the Line chart to match the UI spec
     const generatePath = (days, startPrice = 100) => {
@@ -95,7 +126,7 @@ const Dashboard = () => {
         <div>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.025em', marginBottom: '8px' }}>Portfolio Intelligence</h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', margin: 0 }}>
-            Real-time risk exposure and performance analytics
+            {stats.runTitle}
           </p>
         </div>
         
@@ -112,7 +143,7 @@ const Dashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '28px' }}>
         <MetricCard 
           title="Value At Risk (95%)"
-          value="-4.20%"
+          value={stats.var}
           trend={-1.2}
           isPositiveTrend={false}
           color="var(--status-error)"
@@ -120,7 +151,7 @@ const Dashboard = () => {
         />
         <MetricCard 
           title="Expected Shortfall"
-          value="-8.50%"
+          value={stats.es}
           trend={0.5}
           isPositiveTrend={true}
           color="var(--status-error)"
@@ -128,7 +159,7 @@ const Dashboard = () => {
         />
         <MetricCard 
           title="Annualized Volatility"
-          value="18.50%"
+          value={stats.vol}
           trend={2.1}
           isPositiveTrend={true}
           color="var(--accent-lavender)"
@@ -136,7 +167,7 @@ const Dashboard = () => {
         />
         <MetricCard 
           title="Sharpe Ratio"
-          value="1.42"
+          value={stats.sharpe}
           trend={4.5}
           isPositiveTrend={true}
           color="var(--text-primary)"
