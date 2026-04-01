@@ -95,7 +95,7 @@ const Dashboard = () => {
         <div>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.025em', marginBottom: '8px' }}>Portfolio Intelligence</h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', margin: 0 }}>
-            Real-time risk exposure and performance analytics for <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>hey</span>
+            Real-time risk exposure and performance analytics
           </p>
         </div>
         

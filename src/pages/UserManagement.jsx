@@ -233,7 +233,7 @@ const UserManagement = () => {
       {/* ── EDIT MODAL ── */}
       {editUser && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,28,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '32px', position: 'relative' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '32px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={() => setEditUser(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={24} /></button>
             <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Edit2 color="var(--accent-cyan)" size={20} /> Edit User: {editUser.username}
@@ -291,7 +291,7 @@ const UserManagement = () => {
       {/* ── CREATE MODAL ── */}
       {showCreate && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,15,28,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '460px', padding: '32px', position: 'relative' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '460px', padding: '32px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={() => setShowCreate(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={24} /></button>
             <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <UserPlus color="#A855F7" size={20} /> Create User
