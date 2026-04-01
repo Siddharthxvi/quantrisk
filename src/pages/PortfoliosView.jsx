@@ -123,8 +123,8 @@ const PortfoliosView = () => {
       )}
 
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10, 15, 28, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', zIndex: 100, padding: '24px', overflowY: 'auto' }}>
-          <div className="glass-panel" style={{ margin: 'auto', width: '100%', maxWidth: '400px', padding: '24px', position: 'relative' }}>
+        <div onClick={() => setIsModalOpen(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(10, 15, 28, 0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>
+          <div onClick={(e) => e.stopPropagation()} className="glass-panel" style={{ width: '100%', maxWidth: '400px', maxHeight: '100%', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}><X size={24} /></button>
             <h2 style={{ marginBottom: '24px' }}>{editPortfolioId ? 'Edit Portfolio' : 'Create Portfolio'}</h2>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
