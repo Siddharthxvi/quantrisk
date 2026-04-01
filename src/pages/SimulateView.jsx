@@ -106,29 +106,33 @@ const SimulateView = () => {
           
           {/* Portfolio & Scenario Selectors (Required by API) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-             <div>
+             <div style={{ position: 'relative' }}>
                <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Target Portfolio</label>
-               <select 
-                 value={formData.portfolio_id} 
-                 onChange={e => setFormData({...formData, portfolio_id: e.target.value})} 
-                 style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '1rem', appearance: 'none', cursor: 'pointer' }}
-               >
-                 {portfolios.map(p => (
-                   <option key={p.portfolio_id} value={p.portfolio_id}>{p.name}</option>
-                 ))}
-               </select>
+               <div style={{ position: 'relative' }}>
+                 <select 
+                   value={formData.portfolio_id} 
+                   onChange={e => setFormData({...formData, portfolio_id: e.target.value})} 
+                   style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '1rem', cursor: 'pointer' }}
+                 >
+                   {portfolios.map(p => (
+                     <option key={p.portfolio_id} value={p.portfolio_id}>{p.name}</option>
+                   ))}
+                 </select>
+               </div>
              </div>
-             <div>
+             <div style={{ position: 'relative' }}>
                <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stress Scenario</label>
-               <select 
-                 value={formData.scenario_id} 
-                 onChange={e => setFormData({...formData, scenario_id: e.target.value})} 
-                 style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '1rem', appearance: 'none', cursor: 'pointer' }}
-               >
-                 {scenarios.map(s => (
-                   <option key={s.scenario_id} value={s.scenario_id}>{s.name}</option>
-                 ))}
-               </select>
+               <div style={{ position: 'relative' }}>
+                 <select 
+                   value={formData.scenario_id} 
+                   onChange={e => setFormData({...formData, scenario_id: e.target.value})} 
+                   style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '1rem', cursor: 'pointer' }}
+                 >
+                   {scenarios.map(s => (
+                     <option key={s.scenario_id} value={s.scenario_id}>{s.name}</option>
+                   ))}
+                 </select>
+               </div>
              </div>
           </div>
 

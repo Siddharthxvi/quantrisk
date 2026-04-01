@@ -234,17 +234,7 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <div>
-           <select 
-              value={selectedPortfolioId || ''} 
-              onChange={(e) => setSelectedPortfolioId(Number(e.target.value))}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(217,70,239,0.3)', padding: '11px 22px', borderRadius: '10px', color: '#fff', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', outline: 'none' }}
-           >
-              {portfolios.map(p => (
-                <option key={p.portfolio_id} value={p.portfolio_id}>{p.name}</option>
-              ))}
-           </select>
-        </div>
+        <div></div>
       </div>
 
       {/* 4 Metric Cards */}
