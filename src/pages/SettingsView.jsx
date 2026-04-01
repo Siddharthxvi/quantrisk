@@ -22,7 +22,12 @@ const SettingsView = () => {
   const [profileMsg, setProfileMsg] = useState(null); // { text, success }
 
   // Simulation defaults state
-  const [simSettings, setSimSettings] = useState({ default_iterations: 10000, default_horizon_days: 252, default_confidence_level: 0.95 });
+  const [simSettings, setSimSettings] = useState({ 
+    default_iterations: 10000, 
+    default_horizon_days: 252, 
+    default_confidence_level: 0.95,
+    risk_threshold_pct: 0.10 // 10% default
+  });
   const [simSaving, setSimSaving] = useState(false);
 
   // Dev Actions
@@ -42,7 +47,8 @@ const SettingsView = () => {
     apiClient('/settings/').then(s => setSimSettings({
       default_iterations: s.default_iterations,
       default_horizon_days: s.default_horizon_days,
-      default_confidence_level: s.default_confidence_level
+      default_confidence_level: s.default_confidence_level,
+      risk_threshold_pct: s.risk_threshold_pct || 0.10
     })).catch(() => {});
   }, [user]);
 
@@ -297,6 +303,25 @@ const SettingsView = () => {
                   </button>
                 ))}
               </div>
+            </div>
+            {/* ── NEW: RISK THRESHOLD ── */}
+            <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Risk Alert Threshold (% of NAV)</span>
+                <span style={{ color: 'var(--status-error)', fontWeight: 600 }}>{(simSettings.risk_threshold_pct * 100).toFixed(0)}%</span>
+              </label>
+              <input 
+                type="range" 
+                min="0.01" 
+                max="0.25" 
+                step="0.01" 
+                value={simSettings.risk_threshold_pct} 
+                onChange={e => setSimSettings({ ...simSettings, risk_threshold_pct: parseFloat(e.target.value) })} 
+                style={{ width: '100%', accentColor: 'var(--status-error)' }} 
+              />
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                Flags simulations where VaR exceeds this percentage of total portfolio value.
+              </p>
             </div>
           </div>
           <button onClick={handleSaveSimSettings} disabled={simSaving} style={{ marginTop: '20px', alignSelf: 'flex-start', padding: '10px 24px', background: 'var(--accent-cyan)', color: '#000', fontWeight: 700, borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>

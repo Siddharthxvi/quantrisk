@@ -57,6 +57,7 @@ const Dashboard = () => {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
+  const [alerts, setAlerts] = useState([]);
   const [refreshCountdown, setRefreshCountdown] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
@@ -82,10 +83,17 @@ const Dashboard = () => {
     const fetchSummary = async (isBackground = false) => {
       if (!isBackground) setLoadingRuns(true);
       try {
-        const data = await apiClient(`/dashboard/${selectedPortfolioId}`);
+        // Use the new aggregate dashboard endpoint
+        const [data, alertData] = await Promise.all([
+          apiClient(`/dashboard/${selectedPortfolioId}`),
+          apiClient(`/dashboard/${selectedPortfolioId}/alerts`)
+        ]);
+        
         setDashboardData(data);
+        setAlerts(alertData || []);
         setLastUpdated(new Date());
         
+        // Map the summary parts to existing state and variables
         if (data.latest_metrics) {
             setLatestRun({
                 risk_metrics: Object.entries(data.latest_metrics).map(([key, val]) => ({
