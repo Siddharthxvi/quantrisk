@@ -1,0 +1,259 @@
+---
+title: Portfolio Risk Analytics Platform — ER Diagram
+---
+erDiagram
+
+    %% ============================================================
+    %% RELATIONSHIP TYPE LEGEND
+    %% ||--||   One-to-One (1:1)
+    %% ||--o{   One-to-Many (1:N)
+    %% }o--o{   Many-to-Many (M:N) — resolved via junction table
+    %% RISK_METRIC is a WEAK ENTITY (identified by run_id + metric_type)
+    %% EQUITY, BOND, DERIVATIVE are ISA specialisations of ASSET
+    %% SIMULATION_RUN is a TERNARY relationship (PORTFOLIO × SCENARIO × USER)
+    %% ============================================================
+
+
+    %% ── ENTITY: USER ─────────────────────────────────────────────
+    USER {
+        int     user_id         PK
+        string  username        "NOT NULL UNIQUE"
+        string  email           "NOT NULL UNIQUE"
+        string  password_hash   "NOT NULL"
+        datetime created_at     "DEFAULT NOW()"
+        boolean is_active       "DEFAULT TRUE"
+    }
+
+    %% ── ENTITY: USER_PROFILE (1:1 with USER) ─────────────────────
+    USER_PROFILE {
+        int     profile_id      PK
+        int     user_id         FK "UNIQUE — enforces 1:1"
+        string  full_name
+        string  phone
+        string  department
+        string  bio
+        string  avatar_url
+    }
+
+    %% ── ENTITY: ROLE ─────────────────────────────────────────────
+    ROLE {
+        int     role_id         PK
+        string  role_name       "e.g. DBA | analyst | viewer"
+        boolean can_read        "DEFAULT TRUE"
+        boolean can_write       "DEFAULT FALSE"
+        boolean can_create      "DEFAULT FALSE"
+        boolean can_delete      "DEFAULT FALSE"
+    }
+
+    %% ── JUNCTION: USER_ROLE (M:N between USER and ROLE) ──────────
+    USER_ROLE {
+        int     user_id         FK
+        int     role_id         FK
+        date    assigned_at
+        int     assigned_by     FK "references USER"
+    }
+
+    %% ── ENTITY: ASSET_TYPE ───────────────────────────────────────
+    ASSET_TYPE {
+        int     type_id         PK
+        string  type_name       "equity | bond | derivative"
+        string  description
+        string  risk_category   "low | medium | high"
+    }
+
+    %% ── ENTITY: ASSET (supertype for ISA) ────────────────────────
+    ASSET {
+        int     asset_id        PK
+        int     type_id         FK "references ASSET_TYPE"
+        string  ticker          "NOT NULL UNIQUE"
+        string  asset_name      "NOT NULL"
+        string  currency        "ISO 4217 code"
+        string  exchange        "e.g. NYSE, NSE"
+        string  sector
+        string  country
+    }
+
+    %% ── ISA SUBTYPES OF ASSET ────────────────────────────────────
+
+    EQUITY {
+        int     asset_id        PK "ISA subtype of ASSET"
+        float   dividend_yield  "percentage"
+        string  market_cap_cat  "large | mid | small"
+        string  index_membership
+    }
+
+    BOND {
+        int     asset_id        PK "ISA subtype of ASSET"
+        date    maturity_date
+        float   coupon_rate     "annual pct"
+        string  bond_type       "government | corporate | municipal"
+        string  credit_rating   "AAA AA BBB etc"
+    }
+
+    DERIVATIVE {
+        int     asset_id            PK "ISA subtype of ASSET"
+        int     underlying_asset_id FK "self-ref to ASSET"
+        date    expiry_date
+        string  contract_type       "call | put | future | swap"
+        float   strike_price
+    }
+
+    %% ── ENTITY: MARKET_DATA (1:N from ASSET) ─────────────────────
+    MARKET_DATA {
+        int     data_id         PK
+        int     asset_id        FK
+        date    trading_date    "NOT NULL"
+        float   open_price
+        float   close_price     "NOT NULL"
+        float   high_price
+        float   low_price
+        bigint  volume
+        float   adjusted_close
+    }
+
+    %% ── ENTITY: PORTFOLIO ────────────────────────────────────────
+    PORTFOLIO {
+        int     portfolio_id    PK
+        int     owner_id        FK "references USER"
+        string  name            "NOT NULL"
+        string  description
+        string  base_currency   "ISO 4217"
+        datetime created_at     "DEFAULT NOW()"
+        string  status          "active | archived"
+    }
+
+    %% ── JUNCTION: PORTFOLIO_ASSET (M:N between PORTFOLIO and ASSET)
+    PORTFOLIO_ASSET {
+        int     portfolio_id    FK
+        int     asset_id        FK
+        float   weight          "CHECK (0 < weight <= 1)"
+        float   quantity        "shares / units"
+        float   purchase_price
+        date    added_date
+        date    removed_date    "NULL if still held"
+    }
+
+    %% ── ENTITY: BENCHMARK ────────────────────────────────────────
+    BENCHMARK {
+        int     benchmark_id    PK
+        string  name            "e.g. S&P 500, Nifty 50"
+        string  description
+        string  benchmark_type  "equity | bond | blended"
+        date    base_date
+        string  currency
+    }
+
+    %% ── JUNCTION: PORTFOLIO_BENCHMARK (M:N) ─────────────────────
+    PORTFOLIO_BENCHMARK {
+        int     portfolio_id    FK
+        int     benchmark_id    FK
+        date    assigned_at
+    }
+
+    %% ── ENTITY: SCENARIO ─────────────────────────────────────────
+    SCENARIO {
+        int     scenario_id             PK
+        int     created_by              FK "references USER"
+        string  name                    "NOT NULL UNIQUE"
+        string  description
+        int     interest_rate_shock_bps "basis points — CHECK ABS <= 1000"
+        float   volatility_multiplier   "CHECK > 0 — e.g. 1.5 = +50%"
+        float   equity_shock_pct        "CHECK BETWEEN -1 AND 1"
+        datetime created_at             "DEFAULT NOW()"
+        boolean is_active               "DEFAULT TRUE"
+    }
+
+    %% ── ENTITY: SIMULATION_RUN (TERNARY: PORTFOLIO × SCENARIO × USER)
+    SIMULATION_RUN {
+        int     run_id          PK
+        int     portfolio_id    FK
+        int     scenario_id     FK
+        int     initiated_by    FK "references USER"
+        string  run_type        "monte_carlo | historical"
+        string  status          "pending | running | completed | failed"
+        int     num_simulations "e.g. 10000"
+        datetime started_at
+        datetime completed_at
+        float   execution_time_ms
+    }
+
+    %% ── WEAK ENTITY: RISK_METRIC (composite PK: run_id + metric_type)
+    RISK_METRIC {
+        int     run_id          FK "part of composite PK"
+        string  metric_type     "VaR_95 | VaR_99 | ES_95 | volatility"
+        float   metric_value    "NOT NULL"
+        float   confidence_level
+        datetime computed_at    "DEFAULT NOW()"
+    }
+
+    %% ── ENTITY: REPORT ───────────────────────────────────────────
+    REPORT {
+        int     report_id       PK
+        int     run_id          FK
+        int     generated_by    FK "references USER"
+        string  title
+        datetime generated_at   "DEFAULT NOW()"
+        string  format          "pdf | json | csv"
+        text    summary
+    }
+
+    %% ── ENTITY: AUDIT_LOG ────────────────────────────────────────
+    AUDIT_LOG {
+        int     log_id          PK
+        int     user_id         FK
+        string  entity_type     "portfolio | scenario | run | asset"
+        int     entity_id
+        string  operation       "INSERT | UPDATE | DELETE"
+        text    old_value       "JSON snapshot"
+        text    new_value       "JSON snapshot"
+        datetime timestamp      "DEFAULT NOW()"
+        string  ip_address
+    }
+
+
+    %% ============================================================
+    %% RELATIONSHIPS
+    %% ============================================================
+
+    %% 1:1
+    USER                ||--||      USER_PROFILE        : "has profile"
+
+    %% USER → ROLE  (M:N via USER_ROLE)
+    USER                ||--o{      USER_ROLE           : "assigned"
+    ROLE                ||--o{      USER_ROLE           : "given to"
+
+    %% USER 1:N
+    USER                ||--o{      PORTFOLIO           : "owns"
+    USER                ||--o{      SCENARIO            : "creates"
+    USER                ||--o{      SIMULATION_RUN      : "initiates"
+    USER                ||--o{      REPORT              : "generates"
+    USER                ||--o{      AUDIT_LOG           : "logs"
+
+    %% ASSET_TYPE → ASSET (1:N)
+    ASSET_TYPE          ||--o{      ASSET               : "classifies"
+
+    %% ISA specialisation  (each subtype shares PK with ASSET)
+    ASSET               ||--o|      EQUITY              : "is-a"
+    ASSET               ||--o|      BOND                : "is-a"
+    ASSET               ||--o|      DERIVATIVE          : "is-a"
+
+    %% ASSET → MARKET_DATA (1:N)
+    ASSET               ||--o{      MARKET_DATA         : "has data"
+
+    %% PORTFOLIO ↔ ASSET  (M:N via PORTFOLIO_ASSET)
+    PORTFOLIO           ||--o{      PORTFOLIO_ASSET     : "contains"
+    ASSET               ||--o{      PORTFOLIO_ASSET     : "held in"
+
+    %% PORTFOLIO ↔ BENCHMARK  (M:N via PORTFOLIO_BENCHMARK)
+    PORTFOLIO           ||--o{      PORTFOLIO_BENCHMARK : "measured by"
+    BENCHMARK           ||--o{      PORTFOLIO_BENCHMARK : "applied to"
+
+    %% TERNARY: PORTFOLIO × SCENARIO → SIMULATION_RUN
+    PORTFOLIO           ||--o{      SIMULATION_RUN      : "used in"
+    SCENARIO            ||--o{      SIMULATION_RUN      : "applied in"
+
+    %% SIMULATION_RUN → RISK_METRIC  (1:N, weak entity)
+    SIMULATION_RUN      ||--o{      RISK_METRIC         : "produces"
+
+    %% SIMULATION_RUN → REPORT  (1:N)
+    SIMULATION_RUN      ||--o{      REPORT              : "documented by"

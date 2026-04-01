@@ -1,0 +1,862 @@
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY IMPORTS
+   Paralucent → premium font (falls back to Poppins if not installed)
+   Helvetica Neue → system subtext font
+═══════════════════════════════════════════ */
+
+/* Google Fonts fallback: Poppins Black ≈ Paralucent feel */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+/* ═══════════════════════════════════════════
+   CSS CUSTOM PROPERTIES — DARK (default)
+═══════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-dark:             #0C0015;
+  --bg-surface:          #130020;
+  --bg-surface-elevated: #1C0030;
+  --bg-input:            rgba(0, 0, 0, 0.35);
+
+  /* Text */
+  --text-primary:   #F5EEFF;
+  --text-secondary: #B89CC8;
+  --text-muted:     #7A5F8A;
+
+  /* Accents */
+  --accent-primary:       #D946EF;
+  --accent-primary-glow:  rgba(217, 70, 239, 0.25);
+  --accent-violet:        #A855F7;
+  --accent-lavender:      #C084FC;
+  --accent-deep:          #7C3AED;
+
+  /* Back-compat aliases */
+  --accent-cyan:          #D946EF;
+  --accent-cyan-hover:    #C026D3;
+  --accent-emerald:       #A855F7;
+  --accent-purple:        #C084FC;
+
+  /* Status */
+  --status-success: #C084FC;
+  --status-error:   #F0007B;
+  --status-warning: #E879F9;
+
+  /* Borders / Shadows / Glass */
+  --border-color: rgba(217, 70, 239, 0.12);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(217, 70, 239, 0.06);
+  --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(217, 70, 239, 0.1);
+  --glass-bg:     rgba(19, 0, 32, 0.78);
+  --glass-border: 1px solid rgba(217, 70, 239, 0.1);
+
+  /* Buttons */
+  --btn-bg:           #ffffff;
+  --btn-color:        #7C3AED;
+  --btn-hover-bg:     #f0e8ff;
+  --btn-shadow:       0 2px 12px rgba(124, 58, 237, 0.2);
+
+  /* Console bg */
+  --console-bg: #08000f;
+  --console-border: #2a0045;
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT MODE OVERRIDES
+═══════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-dark:             #f2f0ef;
+  --bg-surface:          #ffffff;
+  --bg-surface-elevated: #ebe6e1;
+  --bg-input:            rgba(255, 255, 255, 0.9);
+
+  --text-primary:   #1a0628;
+  --text-secondary: #5a3f72;
+  --text-muted:     #9a7fb0;
+
+  --accent-primary:      #9333EA;
+  --accent-primary-glow: rgba(147, 51, 234, 0.2);
+  --accent-violet:       #7C3AED;
+  --accent-lavender:     #A855F7;
+  --accent-deep:         #6D28D9;
+  --accent-cyan:         #9333EA;
+  --accent-cyan-hover:   #7C3AED;
+  --accent-emerald:      #7C3AED;
+  --accent-purple:       #A855F7;
+
+  --status-success: #7C3AED;
+  --status-error:   #C2005A;
+  --status-warning: #9333EA;
+
+  --border-color: rgba(147, 51, 234, 0.15);
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(147, 51, 234, 0.08);
+  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(147, 51, 234, 0.12);
+  --glass-bg:     rgba(255, 255, 255, 0.82);
+  --glass-border: 1px solid rgba(147, 51, 234, 0.12);
+
+  --btn-bg:           #7C3AED;
+  --btn-color:        #ffffff;
+  --btn-hover-bg:     #6D28D9;
+  --btn-shadow:       0 2px 12px rgba(124, 58, 237, 0.3);
+
+  --console-bg: #f0eaf7;
+  --console-border: #d8cce8;
+}
+
+/*
+  ─────────────────────────────────────────────
+  PARALUCENT CUSTOM FONT
+  Drop your font files into:
+    /public/fonts/Paralucent-Heavy.woff2  (preferred)
+    /public/fonts/Paralucent-Heavy.ttf    (fallback)
+
+  Vite serves everything in /public/ at the root,
+  so the path below will resolve to /fonts/...
+  ─────────────────────────────────────────────
+*/
+@font-face {
+  font-family: 'Paralucent';
+  src: url('/fonts/ParalucentHeavy.otf') format('opentype');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/fonts/HelveticaNeueMediumItalic.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ═══════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════ */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -700px 0; }
+  100% { background-position:  700px 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes themeSwitch {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATION UTILITIES
+═══════════════════════════════════════════ */
+
+.page-animate { animation: fadeSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.stagger-item { opacity: 0; animation: fadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.10s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.20s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.30s; }
+.stagger-item:nth-child(7) { animation-delay: 0.35s; }
+.stagger-item:nth-child(8) { animation-delay: 0.40s; }
+
+.modal-animate { animation: scaleIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.nav-animate { animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nav-animate:nth-child(1) { animation-delay: 0.04s; }
+.nav-animate:nth-child(2) { animation-delay: 0.08s; }
+.nav-animate:nth-child(3) { animation-delay: 0.12s; }
+.nav-animate:nth-child(4) { animation-delay: 0.16s; }
+.nav-animate:nth-child(5) { animation-delay: 0.20s; }
+.nav-animate:nth-child(6) { animation-delay: 0.24s; }
+.nav-animate:nth-child(7) { animation-delay: 0.28s; }
+.nav-animate:nth-child(8) { animation-delay: 0.32s; }
+.nav-animate:nth-child(9) { animation-delay: 0.36s; }
+
+/* ═══════════════════════════════════════════
+   SKELETON / LOADERS
+═══════════════════════════════════════════ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-elevated) 25%,
+    rgba(217, 70, 239, 0.07) 50%,
+    var(--bg-surface-elevated) 75%
+  );
+  background-size: 700px 100%;
+  animation: shimmer 1.7s infinite linear;
+  border-radius: 6px;
+}
+.skeleton-text    { height: 14px; margin-bottom: 8px; border-radius: 4px; }
+.skeleton-heading { height: 26px; width: 40%; margin-bottom: 12px; border-radius: 4px; }
+.skeleton-chart   { height: 220px; border-radius: 10px; }
+.skeleton-card    { height: 100px; border-radius: 12px; }
+
+.chart-loading {
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 6px; height: 120px; padding: 16px;
+}
+.chart-loading-bar {
+  width: 10px; border-radius: 4px 4px 0 0;
+  background: var(--accent-primary); opacity: 0.3;
+  animation: pulse-glow 1.2s ease-in-out infinite;
+}
+.chart-loading-bar:nth-child(1) { height: 40%; animation-delay: 0.0s; }
+.chart-loading-bar:nth-child(2) { height: 70%; animation-delay: 0.1s; }
+.chart-loading-bar:nth-child(3) { height: 55%; animation-delay: 0.2s; }
+.chart-loading-bar:nth-child(4) { height: 90%; animation-delay: 0.3s; }
+.chart-loading-bar:nth-child(5) { height: 65%; animation-delay: 0.4s; }
+.chart-loading-bar:nth-child(6) { height: 80%; animation-delay: 0.5s; }
+.chart-loading-bar:nth-child(7) { height: 45%; animation-delay: 0.6s; }
+
+.spinner {
+  width: 22px; height: 22px;
+  border: 2px solid rgba(217, 70, 239, 0.2);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  display: inline-block;
+}
+
+/* ═══════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+html, body {
+  /* Smooth theme transition */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  /* 
+    Font stack:
+    - Paralucent     → premium (needs local install or @font-face)
+    - Poppins        → Google Fonts fallback (loaded above)
+    - system sans    → last resort
+    Body/subtext uses Helvetica Neue as overridden on p/label/small.
+  */
+  font-family: 'Poppins', 'Paralucent', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 70% -10%, rgba(168, 85, 247, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at -10% 80%, rgba(217, 70, 239, 0.08) 0%, transparent 55%);
+  background-attachment: fixed;
+}
+
+/* ── Display / heading font: Paralucent → Poppins ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Paralucent', 'Poppins', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); }
+h2 { font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+
+/* ── Subtext / body copy: Helvetica Neue ── */
+p, label, small, .subtext,
+th, td, input, select, textarea, button {
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+}
+
+p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  transition: color 0.3s ease;
+}
+
+a {
+  color: var(--accent-lavender);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover { color: var(--accent-primary); }
+
+/* ═══════════════════════════════════════════
+   GLASS PANEL
+═══════════════════════════════════════════ */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-md);
+  border-radius: 14px;
+  transition:
+    background 0.3s ease,
+    box-shadow 0.28s ease,
+    transform 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.glass-panel:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+  border-color: rgba(217, 70, 239, 0.22);
+}
+
+[data-theme="light"] .glass-panel:hover {
+  border-color: rgba(147, 51, 234, 0.2);
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════ */
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(217, 70, 239, 0.5); }
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+
+.app-container { display: flex; min-height: 100vh; }
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.page-container { padding: 2rem; overflow-y: auto; flex: 1; scroll-behavior: smooth; }
+
+.page-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeSlideUp 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ═══════════════════════════════════════════
+   BUTTONS — White bg + Purple text (dark mode)
+             Purple bg + White text (light mode)
+═══════════════════════════════════════════ */
+
+/* Primary action button */
+.btn-primary,
+button[data-variant="primary"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 10px;
+  background: var(--btn-bg) !important;
+  color: var(--btn-color) !important;
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: none !important;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: var(--btn-shadow);
+}
+
+.btn-primary:hover,
+button[data-variant="primary"]:hover {
+  background: var(--btn-hover-bg) !important;
+  transform: translateY(-1px);
+}
+
+/* Ghost / secondary button */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-weight: 600;
+  border: 1px solid var(--border-color) !important;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ═══════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════ */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.3s;
+}
+
+table { width: 100%; border-collapse: collapse; text-align: left; }
+
+th, td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color 0.3s, background 0.3s;
+}
+
+th {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+tbody tr {
+  transition: background-color 0.15s ease;
+  animation: fadeSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+tbody tr:nth-child(1) { animation-delay: 0.03s; }
+tbody tr:nth-child(2) { animation-delay: 0.06s; }
+tbody tr:nth-child(3) { animation-delay: 0.09s; }
+tbody tr:nth-child(4) { animation-delay: 0.12s; }
+tbody tr:nth-child(5) { animation-delay: 0.15s; }
+tbody tr:nth-child(6) { animation-delay: 0.18s; }
+tbody tr:nth-child(7) { animation-delay: 0.21s; }
+tbody tr:nth-child(8) { animation-delay: 0.24s; }
+
+tr:hover { background-color: rgba(217, 70, 239, 0.04); }
+[data-theme="light"] tr:hover { background-color: rgba(147, 51, 234, 0.05); }
+tr:last-child td { border-bottom: none; }
+
+/* ═══════════════════════════════════════════
+   RANGE SLIDER
+═══════════════════════════════════════════ */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(217, 70, 239, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-glow);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 6px var(--accent-primary-glow);
+}
+
+/* ═══════════════════════════════════════════
+   SELECT
+═══════════════════════════════════════════ */
+
+select {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.2s, background 0.3s;
+}
+select:focus { border-color: var(--accent-primary); }
+select option { background-color: var(--bg-surface-elevated); }
+
+/* ═══════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.badge-success { color: var(--status-success); background: rgba(192,132,252,0.12); border: 1px solid rgba(192,132,252,0.25); }
+.badge-error   { color: var(--status-error);   background: rgba(240,0,123, 0.1);  border: 1px solid rgba(240,0,123,0.25); }
+.badge-warning { color: var(--status-warning);  background: rgba(232,121,249,0.1); border: 1px solid rgba(232,121,249,0.25); }
+
+/* ═══════════════════════════════════════════
+   THEME TOGGLE SWITCH
+═══════════════════════════════════════════ */
+
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 52px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.theme-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.theme-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle input:checked ~ .theme-toggle-track {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-deep));
+  border-color: var(--accent-primary);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.theme-toggle input:checked ~ .theme-toggle-thumb {
+  transform: translateX(24px);
+  background: #ffffff;
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT MODE — COMPREHENSIVE OVERRIDES
+   Uses !important to win over React inline styles
+   (which themselves have 1-0-0-0 specificity)
+═══════════════════════════════════════════ */
+
+/* ── Page background ── */
+[data-theme="light"] body {
+  background-color: #f2f0ef !important;
+  background-image: none !important;
+}
+
+/* ── Sidebar ── */
+[data-theme="light"] aside {
+  background-color: #ffffff !important;
+  border-right-color: rgba(147, 51, 234, 0.12) !important;
+}
+
+/* Sidebar nav links */
+[data-theme="light"] aside a,
+[data-theme="light"] aside nav a {
+  color: #5a3f72 !important;
+}
+
+/* Sidebar user footer area */
+[data-theme="light"] aside > div:last-child {
+  border-top-color: rgba(147, 51, 234, 0.1) !important;
+}
+
+/* Sidebar user chip */
+[data-theme="light"] aside > div:last-child > div:first-child {
+  background: rgba(147, 51, 234, 0.06) !important;
+}
+
+/* ── Top header bar ── */
+[data-theme="light"] header {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-bottom-color: rgba(147, 51, 234, 0.1) !important;
+  backdrop-filter: blur(16px);
+}
+
+/* Header search input */
+[data-theme="light"] header input {
+  background: rgba(242, 240, 239, 0.8) !important;
+  border-color: rgba(147, 51, 234, 0.14) !important;
+  color: #1a0628 !important;
+}
+
+/* ── Glass panels ── */
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(147, 51, 234, 0.1) !important;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(147, 51, 234, 0.07) !important;
+}
+
+[data-theme="light"] .glass-panel:hover {
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(147, 51, 234, 0.14) !important;
+}
+
+/* ── All inputs, selects, textareas ── */
+[data-theme="light"] input:not([type="range"]):not([type="checkbox"]),
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(147, 51, 234, 0.18) !important;
+  color: #1a0628 !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #9a7fb0 !important;
+}
+
+[data-theme="light"] input:focus:not([type="range"]):not([type="checkbox"]),
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus {
+  border-color: rgba(147, 51, 234, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1) !important;
+}
+
+/* Disabled/read-only inputs */
+[data-theme="light"] input:disabled,
+[data-theme="light"] input[disabled] {
+  background-color: rgba(235, 230, 240, 0.7) !important;
+  color: #9a7fb0 !important;
+  border-color: rgba(147, 51, 234, 0.1) !important;
+}
+
+/* ── Tables ── */
+[data-theme="light"] th {
+  background-color: rgba(228, 220, 244, 0.55) !important;
+  color: #7C3AED !important;
+}
+
+[data-theme="light"] th,
+[data-theme="light"] td {
+  border-bottom-color: rgba(147, 51, 234, 0.09) !important;
+  color: #1a0628;
+}
+
+[data-theme="light"] .table-container {
+  border-color: rgba(147, 51, 234, 0.12) !important;
+}
+
+[data-theme="light"] tr:hover {
+  background-color: rgba(147, 51, 234, 0.04) !important;
+}
+
+/* ── Text colors ── */
+[data-theme="light"] p,
+[data-theme="light"] td,
+[data-theme="light"] span:not(.badge *),
+[data-theme="light"] div {
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+/* ── Scrollbar in light mode ── */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #ede9e6;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(147, 51, 234, 0.25);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(147, 51, 234, 0.45);
+}
+
+/* ── Modals / overlays ── */
+[data-theme="light"] [style*="position: fixed"] > .glass-panel,
+[data-theme="light"] [style*="position:fixed"] > .glass-panel {
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16) !important;
+}
+
+/* Modal overlay backdrops */
+[data-theme="light"] [style*="rgba(10, 15, 28"],
+[data-theme="light"] [style*="rgba(10,15,28"] {
+  background: rgba(200, 190, 220, 0.6) !important;
+}
+
+/* ── Developer console panel ── */
+[data-theme="light"] [style*="#0a0a0a"],
+[data-theme="light"] [style*="#08000f"] {
+  background: #f5f0fc !important;
+  border-color: #d8cce8 !important;
+  color: #5a3f72 !important;
+}
+
+/* ── Elevated surface panels (inline rgba dark bg) ── */
+[data-theme="light"] [style*="rgba(0,0,0,0.2"],
+[data-theme="light"] [style*="rgba(0,0,0, 0.2"],
+[data-theme="light"] [style*="rgba(0,0,0,0.3"],
+[data-theme="light"] [style*="rgba(0,0,0, 0.3"],
+[data-theme="light"] [style*="rgba(0,0,0,0.4"],
+[data-theme="light"] [style*="rgba(0,0,0, 0.4"],
+[data-theme="light"] [style*="rgba(0,0,0,0.5"] {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ── Range sliders ── */
+[data-theme="light"] input[type="range"] {
+  background: rgba(147, 51, 234, 0.15) !important;
+}
+
+/* ── Buttons with hardcoded dark inline styles ── */
+[data-theme="light"] button {
+  transition: all 0.2s;
+}
+
+/* ── Status badge colors remain punchy in light mode ── */
+[data-theme="light"] .badge-success { background: rgba(124, 58, 237, 0.1); }
+[data-theme="light"] .badge-error   { background: rgba(194, 0, 90, 0.08); }
+[data-theme="light"] .badge-warning { background: rgba(147, 51, 234, 0.08); }
+
+/* ── Code blocks / monospace areas ── */
+[data-theme="light"] code {
+  background: rgba(147, 51, 234, 0.08) !important;
+  color: #6D28D9 !important;
+}
+
+/* ── Page container background ── */
+[data-theme="light"] .page-container {
+  background-color: transparent;
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT MODE — TEXT COLOR NUCLEAR FIX
+   Catches ALL inline style={{ color: '#fff' }}
+   across every JSX page.
+═══════════════════════════════════════════ */
+
+/* Headings — always inherit the theme text color */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+  color: #1a0628 !important;
+}
+
+/* Body text elements */
+[data-theme="light"] p,
+[data-theme="light"] label,
+[data-theme="light"] small {
+  color: #5a3f72 !important;
+}
+
+/* All divs and spans with hardcoded white,
+   EXCEPT those inside .badge or gradient-bg buttons */
+[data-theme="light"] div:not([style*="gradient"]):not(.badge),
+[data-theme="light"] span:not(.badge):not(.badge *) {
+  color: inherit;
+}
+
+/* Table cells */
+[data-theme="light"] td {
+  color: #1a0628 !important;
+}
+
+/* Force main content divs with white text to flip */
+[data-theme="light"] [style*="color: '#fff'"],
+[data-theme="light"] [style*='color: "#fff"'],
+[data-theme="light"] [style*="color:'#fff'"],
+[data-theme="light"] [style*="color: #fff"],
+[data-theme="light"] [style*="color: rgb(255, 255, 255)"],
+[data-theme="light"] [style*="color:rgb(255,255,255)"] {
+  color: var(--text-primary) !important;
+}
+
+/* Inputs and selects — dark text on light background */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color: #1a0628 !important;
+}
+
+/* Specific fix: Monospace readout panels */
+[data-theme="light"] [style*="fontFamily: 'monospace'"],
+[data-theme="light"] [style*="fontFamily: monospace"],
+[data-theme="light"] [style*="font-family: monospace"] {
+  color: var(--text-primary) !important;
+}
+
+/* ── Buttons ── */
+/* Non-gradient buttons: dark text in light mode */
+[data-theme="light"] button:not([style*="gradient"]) {
+  color: var(--text-primary) !important;
+}
+
+/* Gradient CTA buttons keep white text */
+[data-theme="light"] button[style*="gradient"] {
+  color: #ffffff !important;
+}
+
+/* Login button is a special case (gradient, should stay white) */
+[data-theme="light"] button[type="submit"][style*="gradient"] {
+  color: #ffffff !important;
+}
+
+/* ── Dev console panels ── */
+[data-theme="light"] [style*="backgroundColor: '#0a0a0a'"],
+[data-theme="light"] [style*="background: '#0a0a0a'"],
+[data-theme="light"] [style*="background: '#08000f'"],
+[data-theme="light"] [style*="backgroundColor: '#08000f'"] {
+  background-color: #f5f0fc !important;
+  color: #5a3f72 !important;
+}
+
+/* ── Smooth global transition ── */
+[data-theme="light"] *,
+[data-theme="dark"] * {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}
