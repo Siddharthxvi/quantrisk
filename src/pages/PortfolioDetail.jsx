@@ -78,14 +78,11 @@ const PortfolioDetail = () => {
       // Expected body: PortfolioCreate schema {"name": "...", "assets": [{"asset_id": X, "weight": Y, "quantity": Z}]}
       await apiClient(`/portfolios/${id}/assets`, {
         method: 'PUT',
-        body: JSON.stringify({
-          name: portfolio.name,
-          assets: portfolioAssets.map(a => ({
-            asset_id: a.asset_id,
-            weight: a.weight,
-            quantity: a.quantity
-          }))
-        })
+        body: JSON.stringify(portfolioAssets.map(a => ({
+          asset_id: a.asset_id,
+          weight: a.weight,
+          quantity: a.quantity
+        })))
       });
       fetchData(); // reload
     } catch (err) {
