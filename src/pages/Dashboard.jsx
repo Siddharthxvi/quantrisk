@@ -138,8 +138,8 @@ const Dashboard = () => {
   const portfolioValue = dashboardData?.portfolio_value || 1_000_000;
 
   const formatDollar = (value) => {
-    const dollarAmount = Math.abs(value) * portfolioValue;
-    return '$' + dollarAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const dollarAmount = Math.round(Math.abs(value) * portfolioValue);
+    return '$' + dollarAmount.toLocaleString('en-US');
   };
 
   const stats = {
