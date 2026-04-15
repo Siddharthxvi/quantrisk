@@ -13,7 +13,7 @@ import SimulateView from './pages/SimulateView';
 import SimulationDetail from './pages/SimulationDetail';
 import CompareView from './pages/CompareView';
 import HistoryView from './pages/HistoryView';
-import SandboxView from './pages/SandboxView';
+
 import SettingsView from './pages/SettingsView';
 import UserManagement from './pages/UserManagement';
 
@@ -58,7 +58,7 @@ function App() {
             <Route path="scenarios" element={<RoleRoute allowedRoles={['ADMIN', 'ANALYST']}><ScenariosView /></RoleRoute>} />
             
             <Route path="simulate" element={<RoleRoute allowedRoles={['ADMIN', 'ANALYST']}><SimulateView /></RoleRoute>} />
-            <Route path="sandbox" element={<RoleRoute allowedRoles={['ADMIN', 'ANALYST']}><SandboxView /></RoleRoute>} />
+
             
             {/* Viewers Area */}
             <Route path="simulations/:id" element={<RoleRoute allowedRoles={['ADMIN', 'ANALYST', 'VIEWER']}><SimulationDetail /></RoleRoute>} />

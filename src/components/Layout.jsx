@@ -63,7 +63,7 @@ const Layout = () => {
     { name: 'Portfolios',       path: '/portfolios',  icon: <PieChart size={18} />,    roles: ['ADMIN', 'ANALYST'] },
     { name: 'Scenarios',        path: '/scenarios',   icon: <Activity size={18} />,    roles: ['ADMIN', 'ANALYST'] },
     { name: 'Run Simulation',   path: '/simulate',    icon: <PlaySquare size={18} />,  roles: ['ADMIN', 'ANALYST'] },
-    { name: 'Sandbox',          path: '/sandbox',     icon: <FlaskConical size={18} />, roles: ['ADMIN', 'ANALYST'] },
+
     { name: 'Comparison',       path: '/compare',     icon: <ShieldAlert size={18} />, roles: ['ADMIN', 'ANALYST', 'VIEWER'] },
     { name: 'Run History',      path: '/history',     icon: <History size={18} />,     roles: ['ADMIN', 'ANALYST', 'VIEWER'] },
     { name: 'Settings',         path: '/settings',    icon: <Settings size={18} />,    roles: ['ADMIN', 'ANALYST', 'VIEWER'] },

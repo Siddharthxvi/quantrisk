@@ -134,11 +134,19 @@ const Dashboard = () => {
     return m ? m.metric_value : fallback;
   };
 
+  // Portfolio value for dollar conversion (from backend or default)
+  const portfolioValue = dashboardData?.portfolio_value || 1_000_000;
+
+  const formatDollar = (value) => {
+    const dollarAmount = Math.abs(value) * portfolioValue;
+    return '$' + dollarAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
   const stats = {
     varValue: getMetric('VaR_95', 0.042),
     esValue: getMetric('ES_95', 0.085),
-    var: latestRun?.risk_metrics ? `${(getMetric('VaR_95', 0.042) * 100).toFixed(2)}%` : '-4.20%',
-    es: latestRun?.risk_metrics ? `${(getMetric('ES_95', 0.085) * 100).toFixed(2)}%` : '-8.50%',
+    var: latestRun?.risk_metrics ? formatDollar(getMetric('VaR_95', 0.042)) : '$42,000',
+    es: latestRun?.risk_metrics ? formatDollar(getMetric('ES_95', 0.085)) : '$85,000',
     vol: latestRun?.risk_metrics ? `${(getMetric('volatility', 0.185) * 100).toFixed(2)}%` : '18.50%',
     sharpe: '1.42',
     runTitle: latestRun ? `Showing data for latest run: ${latestRun.run_type === 'monte_carlo_gbm' ? 'Monte Carlo' : (latestRun.run_type || 'Simulation')} (#${latestRun.run_id})` : 'Showing aggregate portfolio risk estimates'
@@ -188,8 +196,8 @@ const Dashboard = () => {
           label: (ctx) => `Frequency: ${ctx.raw.toFixed(0)}`,
           afterBody: () => [
             `-------------------`,
-            `VaR (95%): ${(stats.varValue * 100).toFixed(2)}%`,
-            `Expected Shortfall: ${(stats.esValue * 100).toFixed(2)}%`,
+            `VaR (95%): ${formatDollar(stats.varValue)}`,
+            `Expected Shortfall: ${formatDollar(stats.esValue)}`,
             `Confidence: 95.0%`
           ]
         },
@@ -260,21 +268,6 @@ const Dashboard = () => {
                  Live Monitoring Enabled
               </div>
            </div>
-           <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.1)' }}></div>
-           <button 
-             onClick={() => {
-                // Re-triggering the effect by cycling the ID (or just calling fetch if we exported it, but simple is better)
-                setSelectedPortfolioId(null);
-                setTimeout(() => setSelectedPortfolioId(dashboardData?.runs_summary?.portfolio_id || 1), 10);
-             }}
-             style={{ 
-               background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', 
-               color: '#fff', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer',
-               fontSize: '0.875rem', fontWeight: 600
-             }}
-           >
-             Refresh Now
-           </button>
         </div>
       </div>
 
