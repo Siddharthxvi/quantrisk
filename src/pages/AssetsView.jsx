@@ -58,6 +58,34 @@ const AssetsView = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const [isFetchingInfo, setIsFetchingInfo] = useState(false);
+
+  const handleFetchData = async () => {
+    if (!formData.ticker) {
+      setFormError("Please enter a ticker symbol first.");
+      return;
+    }
+    setIsFetchingInfo(true);
+    setFormError(null);
+    try {
+      const data = await apiClient(`/assets/fetch-data/${formData.ticker}`);
+      if (data) {
+         setFormData(prev => ({
+           ...prev,
+           asset_name: data.asset_name || prev.asset_name,
+           currency: data.currency || prev.currency,
+           base_price: data.base_price || prev.base_price,
+           annual_volatility: data.annual_volatility ? (data.annual_volatility * 100).toFixed(1) : prev.annual_volatility,
+           annual_return: data.annual_return ? (data.annual_return * 100).toFixed(1) : prev.annual_return,
+         }));
+      }
+    } catch (err) {
+      setFormError(err.message || 'Failed to fetch asset data. Verify ticker.');
+    } finally {
+      setIsFetchingInfo(false);
+    }
+  };
+
   const handleCreateAsset = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -229,9 +257,14 @@ const AssetsView = () => {
                 <input required name="asset_name" value={formData.asset_name} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} placeholder="Apple Inc." />
               </div>
               
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '4px' }}>Ticker</label>
-                <input required name="ticker" value={formData.ticker} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', textTransform: 'uppercase' }} placeholder="AAPL" />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '4px' }}>Ticker</label>
+                  <input required name="ticker" value={formData.ticker} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', textTransform: 'uppercase' }} placeholder="AAPL" />
+                </div>
+                <button type="button" onClick={handleFetchData} disabled={isFetchingInfo || !formData.ticker} style={{ padding: '10px 16px', borderRadius: '6px', height: '38.5px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: (isFetchingInfo || !formData.ticker) ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+                  {isFetchingInfo ? '...' : 'Auto-Fill'}
+                </button>
               </div>
               
               <div>
