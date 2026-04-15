@@ -21,35 +21,61 @@ const SandboxView = () => {
   
   // New Asset input
   const [selectedAssetId, setSelectedAssetId] = useState('');
-  const [tempWeight, setTempWeight] = useState('');
   const [tempQuantity, setTempQuantity] = useState('');
 
-  // Results
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    apiClient('/assets/').then(setAllAssets).catch(e => setError("Failed to load assets: " + e.message));
-  }, []);
+  const calculateWeights = (assets, library) => {
+    const totalValue = assets.reduce((sum, item) => {
+      const asset = item.asset || library.find(a => a.asset_id === item.asset_id);
+      return sum + (parseFloat(item.quantity || 0) * (asset?.base_price || 0));
+    }, 0);
+    
+    if (totalValue === 0) return assets.map(a => ({ ...a, weight: 0 }));
+    return assets.map(item => {
+      const asset = item.asset || library.find(a => a.asset_id === item.asset_id);
+      return {
+        ...item,
+        weight: (parseFloat(item.quantity || 0) * (asset?.base_price || 0)) / totalValue
+      };
+    });
+  };
 
   const handleAddAsset = () => {
-    if (!selectedAssetId || !tempWeight || !tempQuantity) return;
+    if (!selectedAssetId || !tempQuantity) return;
     if (sandboxAssets.find(a => a.asset_id === parseInt(selectedAssetId))) return alert("Asset already in sandbox");
 
     const assetObj = allAssets.find(a => a.asset_id === parseInt(selectedAssetId));
-    setSandboxAssets([...sandboxAssets, {
+    const newAsset = {
       asset_id: parseInt(selectedAssetId),
-      weight: parseFloat(tempWeight) / 100,
       quantity: parseFloat(tempQuantity),
-      asset: assetObj
-    }]);
-    setSelectedAssetId(''); setTempWeight(''); setTempQuantity('');
+      asset: assetObj,
+      weight: 0 // placeholder
+    };
+    
+    setSandboxAssets(calculateWeights([...sandboxAssets, newAsset], allAssets));
+    setSelectedAssetId('');
+    setTempQuantity('');
+  };
+
+  const handleRemoveAsset = (assetId) => {
+    const updated = sandboxAssets.filter(x => x.asset_id !== assetId);
+    setSandboxAssets(calculateWeights(updated, allAssets));
+  };
+
+  const getProjectedWeight = () => {
+    if (!selectedAssetId || !tempQuantity) return 0;
+    const assetObj = allAssets.find(a => a.asset_id === parseInt(selectedAssetId));
+    if (!assetObj) return 0;
+    const newVal = parseFloat(tempQuantity) * assetObj.base_price;
+    const currentVal = sandboxAssets.reduce((sum, item) => {
+      const a = item.asset || allAssets.find(x => x.asset_id === item.asset_id);
+      return sum + (item.quantity * (a?.base_price || 0));
+    }, 0);
+    return (newVal / (currentVal + newVal)) * 100;
   };
 
   const handleRunAdHoc = async () => {
     const wSum = sandboxAssets.reduce((acc, curr) => acc + curr.weight, 0);
-    if (Math.abs(wSum - 1.0) > 0.001) {
+    if (sandboxAssets.length > 0 && Math.abs(wSum - 1.0) > 0.001) {
       setError(`Weights must sum to 100%. Currently ${(wSum * 100).toFixed(1)}%.`);
       return;
     }
@@ -136,20 +162,26 @@ const SandboxView = () => {
                 {allAssets.map(a => <option key={a.asset_id} value={a.asset_id}>{a.ticker}</option>)}
               </select>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <input type="number" value={tempWeight} onChange={e => setTempWeight(e.target.value)} placeholder="Weight %" style={{ flex: 1, padding: '8px', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-                <input type="number" value={tempQuantity} onChange={e => setTempQuantity(e.target.value)} placeholder="Qty" style={{ flex: 1, padding: '8px', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+                <input type="number" step="0.01" value={tempQuantity} onChange={e => setTempQuantity(e.target.value)} placeholder="Quantity" style={{ flex: 1, padding: '8px', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
               </div>
-              <button onClick={handleAddAsset} style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>+ Add</button>
+              
+              {selectedAssetId && tempQuantity && (
+                <div style={{ padding: '8px', fontSize: '0.75rem', color: 'var(--accent-cyan)', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  Projected Weight: {getProjectedWeight().toFixed(1)}%
+                </div>
+              )}
+
+              <button onClick={handleAddAsset} disabled={!selectedAssetId || !tempQuantity} style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer', opacity: (!selectedAssetId || !tempQuantity) ? 0.5 : 1 }}>+ Add to Simulation</button>
             </div>
 
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
               {sandboxAssets.map(a => (
                 <div key={a.asset_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem', marginBottom: '8px' }}>
-                  <span><span style={{ fontWeight: 600 }}>{a.asset?.ticker}</span> ({(a.weight*100).toFixed(0)}%)</span>
-                  <button onClick={() => setSandboxAssets(sandboxAssets.filter(x => x.asset_id !== a.asset_id))} style={{ background: 'transparent', border: 'none', color: 'var(--status-error)', cursor: 'pointer' }}><Trash2 size={14}/></button>
+                  <span><span style={{ fontWeight: 600 }}>{a.asset?.ticker}</span> ({a.quantity} units, {(a.weight*100).toFixed(1)}%)</span>
+                  <button onClick={() => handleRemoveAsset(a.asset_id)} style={{ background: 'transparent', border: 'none', color: 'var(--status-error)', cursor: 'pointer' }}><Trash2 size={14}/></button>
                 </div>
               ))}
-              <div style={{ marginTop: '8px', fontWeight: 600, fontSize: '0.875rem', color: sandboxAssets.reduce((s, a) => s + a.weight, 0) === 1 ? 'var(--status-success)' : 'var(--status-error)' }}>
+              <div style={{ marginTop: '8px', fontWeight: 600, fontSize: '0.875rem', color: sandboxAssets.length === 0 || Math.abs(sandboxAssets.reduce((s, a) => s + a.weight, 0) - 1) < 0.001 ? 'var(--status-success)' : 'var(--status-error)' }}>
                 Total: {(sandboxAssets.reduce((s, a) => s + a.weight, 0) * 100).toFixed(1)}%
               </div>
             </div>

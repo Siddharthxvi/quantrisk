@@ -8,12 +8,12 @@ const CompareView = () => {
   const [portfolios, setPortfolios] = useState({});
   const [scenarios, setScenarios] = useState({});
   const [loading, setLoading] = useState(true);
-  
+
   const [selectedMetric, setSelectedMetric] = useState('VaR_95');
-  
+
   const [comparisonData, setComparisonData] = useState(null);
   const [groupBy, setGroupBy] = useState('portfolio');
-  
+
   useEffect(() => {
     const fetchComparison = async () => {
       setLoading(true);
@@ -25,10 +25,10 @@ const CompareView = () => {
         });
         const data = await apiClient(`/comparison/?${queryParams.toString()}`);
         setComparisonData(data);
-        
+
         // Also load metadata for labels if not in comparison data
         const [pData, sData] = await Promise.all([
-          apiClient('/portfolios/').catch(() => []), 
+          apiClient('/portfolios/').catch(() => []),
           apiClient('/scenarios/').catch(() => [])
         ]);
         let pMap = {}; pData.forEach(p => pMap[p.portfolio_id] = p.name);
@@ -65,7 +65,7 @@ const CompareView = () => {
   // Chart Mapping (Support both new /comparison API format and client-side fallback)
   const chartLabels = comparisonData?.labels || Object.keys(portfolios).map(id => portfolios[id]);
   const chartValues = comparisonData?.values || [];
-  
+
   const barData = {
     labels: chartLabels,
     datasets: [{
@@ -97,16 +97,16 @@ const CompareView = () => {
           <p style={{ margin: 0 }}>Cross-sectional and stress-scaling analysis</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <select 
-            value={groupBy} 
+          <select
+            value={groupBy}
             onChange={e => setGroupBy(e.target.value)}
             style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '0.875rem' }}
           >
             <option value="portfolio">Group by Portfolio</option>
             <option value="scenario">Group by Scenario</option>
           </select>
-          <select 
-            value={selectedMetric} 
+          <select
+            value={selectedMetric}
             onChange={e => setSelectedMetric(e.target.value)}
             style={{ padding: '10px', borderRadius: '8px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '0.875rem' }}
           >
@@ -118,7 +118,7 @@ const CompareView = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px' }}>
-        
+
         <div className="glass-panel" style={{ padding: '32px' }}>
           <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>Risk Resiliency Comparison</h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '32px' }}>
@@ -130,15 +130,15 @@ const CompareView = () => {
         </div>
 
         <div className="glass-panel" style={{ padding: '32px' }}>
-           <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>Tail Risk Heatmap Context</h3>
-           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '32px' }}>
-             Additional cross-correlation and severity scaling metrics for the current selection.
-           </p>
-           <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
-             Secondary analytics view pending data aggregation for this group.
-           </div>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>Tail Risk Heatmap Context</h3>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '32px' }}>
+            Additional cross-correlation and severity scaling metrics for the current selection.
+          </p>
+          <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+            Secondary analytics view pending data aggregation for this group.
+          </div>
         </div>
-        
+
       </div>
     </div>
   );
