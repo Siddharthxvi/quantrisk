@@ -120,10 +120,10 @@ const Dashboard = () => {
 
     fetchSummary();
     
-    // Auto-refresh every 10 seconds to detect new simulation results
+    // Auto-refresh every 30 seconds to detect new simulation results without hitting rate limits
     intervalId = setInterval(() => {
         fetchSummary(true);
-    }, 10000);
+    }, 30000);
 
     return () => clearInterval(intervalId);
   }, [selectedPortfolioId]);
