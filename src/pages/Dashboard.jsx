@@ -134,11 +134,9 @@ const Dashboard = () => {
     return m ? m.metric_value : fallback;
   };
 
-  // Portfolio value for dollar conversion (from backend or default)
-  const portfolioValue = dashboardData?.portfolio_value || 1_000_000;
-
+  // VaR and ES from the backend are already absolute dollar P&L values
   const formatDollar = (value) => {
-    const dollarAmount = Math.round(Math.abs(value) * portfolioValue);
+    const dollarAmount = Math.round(Math.abs(value));
     return '$' + dollarAmount.toLocaleString('en-US');
   };
 
